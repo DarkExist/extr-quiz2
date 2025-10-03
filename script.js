@@ -1,9 +1,9 @@
-// script.js
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Элементы DOM
     const mainMenu = document.getElementById('main-menu');
     const quizScreen = document.getElementById('quiz-screen');
     const editorScreen = document.getElementById('editor-screen');
+    const resultsScreen = document.getElementById('results-screen'); // Новый экран результатов
     const startBtn = document.getElementById('start-btn');
     const editBtn = document.getElementById('edit-btn');
     const backToMenuBtn = document.getElementById('back-to-menu');
@@ -34,26 +34,24 @@ document.addEventListener('DOMContentLoaded', function() {
     let selectedAnswers = [];
     let currentEditingQuestionIndex = -1;
 
+
     // Загрузка фонового изображения
     function loadBackgroundImage() {
-        // В реальном приложении здесь будет логика выбора случайного изображения из папки background
         const backgroundImages = [
             'url("https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80")',
             'url("https://images.unsplash.com/photo-1505506874110-6a7a69069a08?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80")',
             'url("https://images.unsplash.com/photo-1518837695005-2083093ee35b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80")'
         ];
-        
         const randomIndex = Math.floor(Math.random() * backgroundImages.length);
         document.body.style.backgroundImage = backgroundImages[randomIndex];
     }
 
-    // Загрузка вопросов из localStorage или использование демо-данных
+    // Загрузка вопросов
     function loadQuestions() {
         const savedQuestions = localStorage.getItem('quizQuestions');
         if (savedQuestions) {
             questions = JSON.parse(savedQuestions);
         } else {
-            // Демо-вопросы
             questions = [
                 {
                     question: "Какой язык программирования используется для создания веб-страниц?",
@@ -91,23 +89,20 @@ document.addEventListener('DOMContentLoaded', function() {
         updateTotalQuestions();
     }
 
-    // Сохранение вопросов в localStorage
     function saveQuestions() {
         localStorage.setItem('quizQuestions', JSON.stringify(questions));
     }
 
-    // Обновление счетчика вопросов
     function updateTotalQuestions() {
         totalQuestionsSpan.textContent = questions.length;
     }
 
-    // Навигация по экранам
-    startBtn.addEventListener('click', function() {
+    // Навигация
+    startBtn.addEventListener('click', function () {
         if (questions.length === 0) {
             alert('Добавьте вопросы в редакторе перед началом квиза!');
             return;
         }
-        
         mainMenu.classList.remove('active');
         quizScreen.classList.add('active');
         currentQuestionIndex = 0;
@@ -115,77 +110,55 @@ document.addEventListener('DOMContentLoaded', function() {
         showQuestion(currentQuestionIndex);
     });
 
-    editBtn.addEventListener('click', function() {
+    editBtn.addEventListener('click', function () {
         mainMenu.classList.remove('active');
         editorScreen.classList.add('active');
         renderQuestionsList();
     });
 
-    backToMenuBtn.addEventListener('click', function() {
+    backToMenuBtn.addEventListener('click', function () {
         editorScreen.classList.remove('active');
         quizScreen.classList.remove('active');
         mainMenu.classList.add('active');
     });
 
-    // Функционал квиза
+    // === ОТОБРАЖЕНИЕ ВОПРОСА ===
     function showQuestion(index) {
+        nextBtn.classList.add("disabled")
+        answersContainer.style.pointerEvents = "auto";
+
         if (index < 0 || index >= questions.length) return;
-        
+
         const question = questions[index];
         questionText.textContent = question.question;
         currentQuestionSpan.textContent = index + 1;
-        
-        // Очистка медиа-контейнера
+
         questionMedia.innerHTML = '';
-        
-        // Добавление медиа, если есть
-        if (question.media.type !== 'none' && question.media.src) {
+
+        if (question.media.type !== 'none' && question.media.src.trim()) {
             const mediaContainer = document.createElement('div');
             mediaContainer.className = 'media-container';
-            
+
             if (question.media.type === 'image') {
                 const img = document.createElement('img');
-                img.src = question.media.src;
+                img.src = question.media.src.trim();
                 img.alt = 'Иллюстрация к вопросу';
-                
-                img.onload = function() {
-                    console.log("Изображение загружено, добавляем обработчик клика");
-                    img.addEventListener('click', function() {
-                        console.log("Клик по изображению!");
-                        showMediaModal('image', question.media.src);
-                    });
-                };
-                
-                // Также добавляем обработчик на случай, если изображение уже загружено
-                img.addEventListener('click', function() {
-                    console.log("Клик по изображению (второй обработчик)!");
-                    showMediaModal('image', question.media.src);
-                });
-                
-                // Обработчик ошибки загрузки
-                img.onerror = function() {
-                    console.error("Ошибка загрузки изображения:", question.media.src);
-                    img.style.display = 'none';
-                };
-                
+                img.addEventListener('click', () => showMediaModal('image', question.media.src.trim()));
+                img.onerror = () => img.style.display = 'none';
                 mediaContainer.appendChild(img);
             } else if (question.media.type === 'video') {
                 const videoWrapper = document.createElement('div');
                 videoWrapper.className = 'video-wrapper';
-                
                 const video = document.createElement('iframe');
                 video.setAttribute('allowfullscreen', '');
-                video.src = getEmbedUrl(question.media.src);
-                video.poster = '';
-                
+                video.src = getEmbedUrl(question.media.src.trim());
                 videoWrapper.appendChild(video);
                 mediaContainer.appendChild(videoWrapper);
             }
-            
-        questionMedia.appendChild(mediaContainer);
+
+            questionMedia.appendChild(mediaContainer);
         }
-        
-        // Очистка и добавление вариантов ответов
+
         answersContainer.innerHTML = '';
         question.answers.forEach((answer, i) => {
             const answerOption = document.createElement('div');
@@ -194,63 +167,107 @@ document.addEventListener('DOMContentLoaded', function() {
                 answerOption.classList.add('selected');
             }
             answerOption.textContent = answer.text;
-            answerOption.addEventListener('click', function() {
-                selectAnswer(i);
-            });
+            answerOption.addEventListener('click', () => selectAnswer(i));
             answersContainer.appendChild(answerOption);
         });
-        
-        // Обновление состояния кнопок навигации
+
         prevBtn.disabled = index === 0;
         nextBtn.textContent = index === questions.length - 1 ? 'Завершить' : 'Далее';
     }
 
     function selectAnswer(answerIndex) {
+        nextBtn.classList.remove("disabled")
         selectedAnswers[currentQuestionIndex] = answerIndex;
-        const answerOptions = document.querySelectorAll('.answer-option');
-        answerOptions.forEach((option, i) => {
-            if (i === answerIndex) {
-                option.classList.add('selected');
-            } else {
-                option.classList.remove('selected');
-            }
+        document.querySelectorAll('.answer-option').forEach((opt, i) => {
+            opt.classList.toggle('selected', i === answerIndex);
         });
     }
 
-    prevBtn.addEventListener('click', function() {
+    // === ОБРАБОТКА КНОПКИ "ДАЛЕЕ" С АНИМАЦИЕЙ ===
+    nextBtn.addEventListener('click', function () {
+        answersContainer.style.pointerEvents = "none";
+        const userAnswerIndex = selectedAnswers[currentQuestionIndex];
+        if (userAnswerIndex === null) {
+            alert('Пожалуйста, выберите ответ!');
+            return;
+        }
+
+        const isCorrect = questions[currentQuestionIndex].answers[userAnswerIndex].correct;
+
+        const selectedRow = document.querySelector('.answer-option.selected');
+        // Анимация кнопки
+        nextBtn.disabled = true;
+        nextBtn.style.transition = 'background-color 0.3s';
+
+        nextBtn.style.backgroundColor = isCorrect ? '#4CAF50' : '#F44336';
+        
+        selectedRow.classList.remove("selected");
+        selectedRow.classList.add(isCorrect ? "correct" : "incorrect");
+        
+        nextBtn.textContent = isCorrect ? 'Верно!' : 'Неверно!';
+
+        setTimeout(() => {
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                showQuestion(currentQuestionIndex);
+                nextBtn.disabled = false;
+                nextBtn.style.backgroundColor = '';
+                nextBtn.textContent = currentQuestionIndex === questions.length - 1 ? 'Завершить' : 'Далее';
+            } else {
+                showResultsScreen();
+            }
+        }, 2000);
+    });
+
+    prevBtn.addEventListener('click', function () {
         if (currentQuestionIndex > 0) {
             currentQuestionIndex--;
             showQuestion(currentQuestionIndex);
         }
     });
 
-    nextBtn.addEventListener('click', function() {
-        if (currentQuestionIndex < questions.length - 1) {
-            currentQuestionIndex++;
-            showQuestion(currentQuestionIndex);
-        } else {
-            // Завершение квиза
-            showResults();
-        }
-    });
+    // === ЭКРАН РЕЗУЛЬТАТОВ ===
+    function showResultsScreen() {
+        const resultsList = document.getElementById('results-list');
+        let correctCount = 0;
 
-    function showResults() {
-        let correctAnswers = 0;
-        questions.forEach((question, i) => {
-            if (selectedAnswers[i] !== null && question.answers[selectedAnswers[i]].correct) {
-                correctAnswers++;
-            }
+        resultsList.innerHTML = '';
+
+        questions.forEach((q, i) => {
+            const userAnswerIndex = selectedAnswers[i];
+            const userAnswerText = userAnswerIndex !== null ? q.answers[userAnswerIndex].text : 'Не отвечено';
+            const correctAnswerText = q.answers.find(a => a.correct).text;
+            const isCorrect = userAnswerIndex !== null && q.answers[userAnswerIndex].correct;
+
+            if (isCorrect) correctCount++;
+
+            const resultItem = document.createElement('div');
+            resultItem.className = 'result-item';
+            resultItem.innerHTML = `
+                <h3>Вопрос ${i + 1}: ${q.question}</h3>
+                <p><strong>Ваш ответ:</strong> ${userAnswerText}</p>
+                <p><strong>Правильный ответ:</strong> ${correctAnswerText}</p>
+                <p class="${isCorrect ? 'correct' : 'incorrect'}">
+                    ${isCorrect ? '✅ Верно' : '❌ Неверно'}
+                </p>
+                <hr>
+            `;
+            resultsList.appendChild(resultItem);
+
+            const backToMainBtn = document.getElementById('back-to-main');
+            backToMainBtn.addEventListener('click', () => {
+                location.reload();
+            });
         });
-        
-        const resultMessage = `Вы ответили правильно на ${correctAnswers} из ${questions.length} вопросов!`;
-        alert(resultMessage);
-        
-        // Возврат в главное меню
+
+        document.getElementById('correct-count').textContent = correctCount;
+        document.getElementById('total-count').textContent = questions.length;
+
         quizScreen.classList.remove('active');
-        mainMenu.classList.add('active');
+        document.getElementById('results-screen').classList.add('active');
     }
 
-    // Функционал редактора
+    // === РЕДАКТОР (остаётся без изменений, кроме мелких правок) ===
     function renderQuestionsList() {
         questionsContainer.innerHTML = '';
         questions.forEach((question, index) => {
@@ -259,61 +276,58 @@ document.addEventListener('DOMContentLoaded', function() {
             if (index === currentEditingQuestionIndex) {
                 questionItem.classList.add('active');
             }
-            
+
             const questionPreview = document.createElement('div');
             questionPreview.className = 'question-preview';
-            
+
             const questionNumber = document.createElement('div');
             questionNumber.className = 'question-number';
             questionNumber.textContent = index + 1;
-            
+
             const questionTextPreview = document.createElement('div');
             questionTextPreview.className = 'question-text-preview';
             questionTextPreview.textContent = question.question;
-            
+
             questionPreview.appendChild(questionNumber);
             questionPreview.appendChild(questionTextPreview);
             questionItem.appendChild(questionPreview);
-            
-            questionItem.addEventListener('click', function() {
+
+            questionItem.addEventListener('click', function () {
                 currentEditingQuestionIndex = index;
                 renderQuestionsList();
                 loadQuestionForEditing(index);
             });
-            
+
             questionsContainer.appendChild(questionItem);
         });
     }
 
     function loadQuestionForEditing(index) {
         if (index < 0 || index >= questions.length) return;
-        
+
         const question = questions[index];
         questionInput.value = question.question;
-        
-        // Установка типа медиа
+
         mediaTypeSelect.value = question.media.type;
         updateMediaInput();
-        
-        // Установка источника медиа, если есть
+
         if (question.media.type !== 'none') {
-            document.getElementById('media-src').value = question.media.src;
+            const mediaSrcInput = document.getElementById('media-src');
+            if (mediaSrcInput) mediaSrcInput.value = question.media.src;
         }
-        
-        // Очистка и добавление ответов
+
         answersEditor.innerHTML = '';
-        question.answers.forEach((answer, i) => {
+        question.answers.forEach((answer) => {
             addAnswerField(answer.text, answer.correct);
         });
-        
-        // Показать кнопку удаления
+
         deleteQuestionBtn.style.display = 'block';
     }
 
     function updateMediaInput() {
         mediaInputContainer.innerHTML = '';
         const mediaType = mediaTypeSelect.value;
-        
+
         if (mediaType !== 'none') {
             const mediaSrcInput = document.createElement('input');
             mediaSrcInput.type = 'text';
@@ -328,35 +342,35 @@ document.addEventListener('DOMContentLoaded', function() {
     function addAnswerField(text = '', correct = false) {
         const answerItem = document.createElement('div');
         answerItem.className = 'answer-item';
-        
-        const answerInput = document.createElement('input');
-        answerInput.type = 'text';
-        answerInput.placeholder = 'Текст ответа';
-        answerInput.value = text;
-        
+
         const correctCheckbox = document.createElement('input');
         correctCheckbox.type = 'checkbox';
         correctCheckbox.className = 'correct-checkbox';
         correctCheckbox.checked = correct;
-        
+
+        const answerInput = document.createElement('input');
+        answerInput.type = 'text';
+        answerInput.placeholder = 'Текст ответа';
+        answerInput.value = text;
+
         const removeBtn = document.createElement('button');
         removeBtn.className = 'remove-answer';
         removeBtn.textContent = '×';
-        removeBtn.addEventListener('click', function() {
+        removeBtn.addEventListener('click', function () {
             if (answersEditor.children.length > 2) {
                 answerItem.remove();
             } else {
                 alert('Должно быть как минимум 2 ответа!');
             }
         });
-        
+
         answerItem.appendChild(correctCheckbox);
         answerItem.appendChild(answerInput);
         answerItem.appendChild(removeBtn);
         answersEditor.appendChild(answerItem);
     }
 
-    addAnswerBtn.addEventListener('click', function() {
+    addAnswerBtn.addEventListener('click', function () {
         if (answersEditor.children.length < 6) {
             addAnswerField();
         } else {
@@ -364,45 +378,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    saveQuestionBtn.addEventListener('click', function() {
+    saveQuestionBtn.addEventListener('click', function () {
+        const data = collectQuestionData();
+        if (!data) return;
+
         if (currentEditingQuestionIndex === -1) {
-            // Добавление нового вопроса
-            const newQuestion = collectQuestionData();
-            if (newQuestion) {
-                questions.push(newQuestion);
-                currentEditingQuestionIndex = questions.length - 1;
-                saveQuestions();
-                renderQuestionsList();
-                loadQuestionForEditing(currentEditingQuestionIndex);
-                updateTotalQuestions();
-            }
+            questions.push(data);
+            currentEditingQuestionIndex = questions.length - 1;
         } else {
-            // Редактирование существующего вопроса
-            const updatedQuestion = collectQuestionData();
-            if (updatedQuestion) {
-                questions[currentEditingQuestionIndex] = updatedQuestion;
-                saveQuestions();
-                renderQuestionsList();
-                updateTotalQuestions();
-            }
+            questions[currentEditingQuestionIndex] = data;
         }
+
+        saveQuestions();
+        renderQuestionsList();
+        updateTotalQuestions();
     });
 
     function getEmbedUrl(rawUrl) {
-        if (rawUrl.includes("embed")) {
-            return rawUrl;
-        }
-        // Temporary only for youtube and rutube
-        if (rawUrl.includes("youtube.com")) {
-            return rawUrl.replace("watch?v=", "embed/")
-        }
-        else if (rawUrl.includes("rutube.ru")) {
-            return rawUrl.replace("video/", "play/embed/")
-        }
-        
+        if (rawUrl.includes("embed")) return rawUrl;
+        if (rawUrl.includes("youtube.com")) return rawUrl.replace("watch?v=", "embed/");
+        if (rawUrl.includes("rutube.ru")) return rawUrl.replace("video/", "play/embed/");
         return rawUrl;
     }
-
 
     function collectQuestionData() {
         const questionText = questionInput.value.trim();
@@ -410,53 +407,48 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Введите текст вопроса!');
             return null;
         }
-        
+
         const mediaType = mediaTypeSelect.value;
         let mediaSrc = '';
         if (mediaType !== 'none') {
-            mediaSrc = document.getElementById('media-src').value.trim();
+            const srcInput = document.getElementById('media-src');
+            mediaSrc = srcInput ? srcInput.value.trim() : '';
             if (!mediaSrc) {
                 alert(`Введите URL ${mediaType === 'image' ? 'изображения' : 'видео'}!`);
                 return null;
             }
         }
-        
-        const answers = [];
+
         const answerItems = answersEditor.querySelectorAll('.answer-item');
         if (answerItems.length < 2) {
             alert('Должно быть как минимум 2 ответа!');
             return null;
         }
-        
-        let hasCorrectAnswer = false;
+
+        const answers = [];
+        let hasCorrect = false;
         answerItems.forEach(item => {
-            const answerText = item.querySelector('input[type="text"]').value.trim();
-            const isCorrect = item.querySelector('.correct-checkbox').checked;
-            
-            if (answerText) {
-                answers.push({ text: answerText, correct: isCorrect });
-                if (isCorrect) hasCorrectAnswer = true;
+            const text = item.querySelector('input[type="text"]').value.trim();
+            const correct = item.querySelector('.correct-checkbox').checked;
+            if (text) {
+                answers.push({ text, correct });
+                if (correct) hasCorrect = true;
             }
         });
-        
+
         if (answers.length < 2) {
             alert('Должно быть как минимум 2 ответа с текстом!');
             return null;
         }
-        
-        if (!hasCorrectAnswer) {
+        if (!hasCorrect) {
             alert('Должен быть хотя бы один правильный ответ!');
             return null;
         }
-        
-        return {
-            question: questionText,
-            media: { type: mediaType, src: mediaSrc },
-            answers: answers
-        };
+
+        return { question: questionText, media: { type: mediaType, src: mediaSrc }, answers };
     }
 
-    deleteQuestionBtn.addEventListener('click', function() {
+    deleteQuestionBtn.addEventListener('click', function () {
         if (currentEditingQuestionIndex !== -1 && confirm('Удалить этот вопрос?')) {
             questions.splice(currentEditingQuestionIndex, 1);
             saveQuestions();
@@ -467,7 +459,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    addQuestionBtn.addEventListener('click', function() {
+    addQuestionBtn.addEventListener('click', function () {
         currentEditingQuestionIndex = -1;
         clearQuestionEditor();
         deleteQuestionBtn.style.display = 'none';
@@ -478,17 +470,15 @@ document.addEventListener('DOMContentLoaded', function() {
         mediaTypeSelect.value = 'none';
         updateMediaInput();
         answersEditor.innerHTML = '';
-        // Добавить 2 пустых ответа по умолчанию
         addAnswerField();
         addAnswerField();
     }
 
-    // Модальное окно для медиа
+    // Модальное окно
     function showMediaModal(type, src) {
-        // Сначала скрываем оба медиа элемента
         modalImage.style.display = 'none';
         modalVideo.style.display = 'none';
-        
+
         if (type === 'image') {
             modalImage.src = src;
             modalImage.style.display = 'block';
@@ -496,23 +486,23 @@ document.addEventListener('DOMContentLoaded', function() {
             modalVideo.src = src;
             modalVideo.style.display = 'block';
         }
-        
+
         mediaModal.style.display = 'block';
     }
 
-    closeModal.addEventListener('click', function() {
+    closeModal.addEventListener('click', function () {
         mediaModal.style.display = 'none';
-        modalVideo.pause();
+        modalVideo.src = '';
     });
 
-    window.addEventListener('click', function(event) {
+    window.addEventListener('click', function (event) {
         if (event.target === mediaModal) {
             mediaModal.style.display = 'none';
-            modalVideo.pause();
+            modalVideo.src = '';
         }
     });
 
-    // Инициализация приложения
+    // Инициализация
     loadBackgroundImage();
     loadQuestions();
     clearQuestionEditor();

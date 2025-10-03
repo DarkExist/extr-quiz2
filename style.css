@@ -40,6 +40,103 @@ body {
     align-items: center;
     justify-content: center;
 }
+/* Экран результатов — тёмная тема */
+#results-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 2rem;
+    height: 100vh;
+    overflow-y: auto;
+    background-color: rgba(18, 18, 18, 0.94); /* Почти чёрный с лёгкой прозрачностью */
+    color: #f0f0f0;
+}
+
+#results-screen.active {
+    display: flex;
+}
+
+.results-container {
+    width: 100%;
+    max-width: 800px;
+    background: #252525; /* Тёмно-серый фон блока */
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    color: #e0e0e0;
+}
+
+.results-container h1 {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #ffffff;
+    font-size: 2rem;
+    font-weight: 600;
+}
+
+.result-item {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.2rem;
+    border-bottom: 1px solid #3a3a3a;
+}
+
+.result-item h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+    color: #ffffff;
+    font-weight: 500;
+}
+
+.result-item p {
+    margin: 0.4rem 0;
+    color: #c5c5c5;
+    line-height: 1.5;
+}
+
+.result-item .correct {
+    color: #4caf50; /* Свежий зелёный */
+    font-weight: bold;
+}
+
+.result-item .incorrect {
+    color: #f44336; /* Яркий красный */
+    font-weight: bold;
+}
+
+.summary {
+    text-align: center;
+    margin: 2rem 0;
+    padding: 1rem;
+    background-color: #2d2d2d;
+    border-radius: 8px;
+    border: 1px solid #3a3a3a;
+}
+
+.summary h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #bb86fc; /* Акцентный цвет (фиолетовый, как в Material Dark Theme) */
+}
+
+#back-to-main {
+    margin-top: 1rem;
+    padding: 0.75rem 2rem;
+    font-size: 1.1rem;
+    background-color: #bb86fc;
+    color: #121212;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+#back-to-main:hover {
+    background-color: #a366d9;
+}
+
+
 
 /* Главное меню */
 #main-menu {
@@ -178,33 +275,15 @@ body {
     display: inline-block;
 }
 
-.play-button {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 60px;
-    height: 60px;
-    background: rgba(233, 69, 96, 0.8);
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
+#next-btn.disabled {
+    background-color: gray;
+    transition: unset;
+    cursor: default;
 }
 
-.play-button:hover {
-    background: rgba(233, 69, 96, 1);
-    transform: translate(-50%, -50%) scale(1.1);
-}
-
-.play-button::after {
-    content: '';
-    border-style: solid;
-    border-width: 10px 0 10px 15px;
-    border-color: transparent transparent transparent white;
-    margin-left: 5px;
+#next-btn.disabled:hover{
+    transform: unset;
+    cursor: default;
 }
 
 .fullscreen-btn {
@@ -264,6 +343,19 @@ body {
     background: rgba(255, 230, 100, 0.25);
     border-color: #ffcc00; 
 }
+
+.answer-option.correct {
+    background: rgba(100, 255, 100, 0.25);
+    border-color: #00cc00;
+    transition: 0.3s;
+}
+
+.answer-option.incorrect {
+    background: rgba(255, 100, 100, 0.25);
+    border-color: #cc0000;
+    transition: 0.3s;
+}
+
 
 .quiz-controls {
     display: flex;
@@ -588,5 +680,28 @@ iframe {
     
     .media-container img, .media-container video {
         max-height: 20vh;
+    }
+}
+
+/* Адаптивность */
+@media (max-width: 600px) {
+    #results-screen {
+        padding: 1rem;
+    }
+
+    .results-container {
+        padding: 1.5rem;
+    }
+
+    .results-container h1 {
+        font-size: 1.6rem;
+    }
+
+    .result-item h3 {
+        font-size: 1.1rem;
+    }
+
+    .summary h2 {
+        font-size: 1.3rem;
     }
 }
