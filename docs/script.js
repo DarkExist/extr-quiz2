@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const indices = Array.from({ length: question.answers.length }, (_, i) => i);
 
         // Перемешиваем индексы
-        shuffleArray(indices); // твоя функция — она корректна
+        shuffleArray(indices);
 
         // Создаём элементы в новом порядке
         indices.forEach(i => {
@@ -196,7 +196,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // === ОБРАБОТКА КНОПКИ "ДАЛЕЕ" С АНИМАЦИЕЙ ===
     nextBtn.addEventListener('click', function () {
-        answersContainer.style.pointerEvents = "none";
+        if (!nextBtn.classList.contains("disabled")) {
+            answersContainer.style.pointerEvents = "none";
+        }
+        
         const currentQuestion = questions[currentQuestionIndex];
         const userAnswerId = currentQuestion.userAnswerId;
         if (userAnswerId === undefined || userAnswerId === null) {
