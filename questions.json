@@ -1,0 +1,53 @@
+// questions.json (пример структуры)
+[
+  {
+    "question": "Какой язык программирования используется для создания веб-страниц?",
+    "media": {
+      "type": "none",
+      "src": ""
+    },
+    "answers": [
+      {
+        "text": "JavaScript",
+        "correct": true
+      },
+      {
+        "text": "Python",
+        "correct": false
+      },
+      {
+        "text": "Java",
+        "correct": false
+      },
+      {
+        "text": "C++",
+        "correct": false
+      }
+    ]
+  },
+  {
+    "question": "Какое животное является символом России?",
+    "media": {
+      "type": "image",
+      "src": "https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?ixlib=rb-1.2.1&auto=format&fit=crop&w=1352&q=80"
+    },
+    "answers": [
+      {
+        "text": "Медведь",
+        "correct": true
+      },
+      {
+        "text": "Волк",
+        "correct": false
+      },
+      {
+        "text": "Орел",
+        "correct": false
+      },
+      {
+        "text": "Тигр",
+        "correct": false
+      }
+    ]
+  }
+]
