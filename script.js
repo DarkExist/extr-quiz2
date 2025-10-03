@@ -38,9 +38,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Загрузка фонового изображения
     function loadBackgroundImage() {
         const backgroundImages = [
-            'url("https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80")',
-            'url("https://images.unsplash.com/photo-1505506874110-6a7a69069a08?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80")',
-            'url("https://images.unsplash.com/photo-1518837695005-2083093ee35b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80")'
+            'url("./images/background.jpg")'
         ];
         const randomIndex = Math.floor(Math.random() * backgroundImages.length);
         document.body.style.backgroundImage = backgroundImages[randomIndex];
@@ -51,42 +49,26 @@ document.addEventListener('DOMContentLoaded', function () {
         const savedQuestions = localStorage.getItem('quizQuestions');
         if (savedQuestions) {
             questions = JSON.parse(savedQuestions);
-        } else {
-            questions = [
-                {
-                    question: "Какой язык программирования используется для создания веб-страниц?",
-                    media: { type: "none", src: "" },
-                    answers: [
-                        { text: "JavaScript", correct: true },
-                        { text: "Python", correct: false },
-                        { text: "Java", correct: false },
-                        { text: "C++", correct: false }
-                    ]
-                },
-                {
-                    question: "Какое животное является символом России?",
-                    media: { type: "image", src: "https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?ixlib=rb-1.2.1&auto=format&fit=crop&w=1352&q=80" },
-                    answers: [
-                        { text: "Медведь", correct: true },
-                        { text: "Волк", correct: false },
-                        { text: "Орел", correct: false },
-                        { text: "Тигр", correct: false }
-                    ]
-                },
-                {
-                    question: "Сколько планет в Солнечной системе?",
-                    media: { type: "none", src: "" },
-                    answers: [
-                        { text: "8", correct: true },
-                        { text: "9", correct: false },
-                        { text: "7", correct: false },
-                        { text: "10", correct: false }
-                    ]
-                }
-            ];
-            saveQuestions();
+            updateTotalQuestions();
+            return;
         }
-        updateTotalQuestions();
+        
+        // Загружаем вопросы из внешнего JSON файла
+        fetch('questions.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Файл с вопросами не найден');
+                }
+                return response.json();
+            })
+            .then(data => {
+                questions = data;
+                saveQuestions();
+                updateTotalQuestions();
+            })
+            .catch(error => {
+                console.error('Ошибка загрузки вопросов:', error);
+            });
     }
 
     function saveQuestions() {
@@ -171,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function () {
             answersContainer.appendChild(answerOption);
         });
 
-        prevBtn.disabled = index === 0;
+        prevBtn.textContent = index === 0 ? "На главную" : "Назад";
         nextBtn.textContent = index === questions.length - 1 ? 'Завершить' : 'Далее';
     }
 
@@ -220,6 +202,9 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     prevBtn.addEventListener('click', function () {
+        if (currentQuestionIndex == 0) {
+            location.reload();
+        }
         if (currentQuestionIndex > 0) {
             currentQuestionIndex--;
             showQuestion(currentQuestionIndex);
