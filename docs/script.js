@@ -31,7 +31,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // Переменные состояния
     let questions = [];
     let currentQuestionIndex = 0;
-    let selectedAnswers = [];
     let currentEditingQuestionIndex = -1;
 
 
@@ -85,10 +84,13 @@ document.addEventListener('DOMContentLoaded', function () {
             alert('Добавьте вопросы в редакторе перед началом квиза!');
             return;
         }
+        questions.forEach(q => {
+            delete q.userAnswerId; // или q.userAnswerId = null;
+        });
+
         mainMenu.classList.remove('active');
         quizScreen.classList.add('active');
         currentQuestionIndex = 0;
-        selectedAnswers = new Array(questions.length).fill(null);
         showQuestion(currentQuestionIndex);
     });
 
@@ -103,6 +105,13 @@ document.addEventListener('DOMContentLoaded', function () {
         quizScreen.classList.remove('active');
         mainMenu.classList.add('active');
     });
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
 
     // === ОТОБРАЖЕНИЕ ВОПРОСА ===
     function showQuestion(index) {
@@ -142,50 +151,69 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         answersContainer.innerHTML = '';
+
+        let answerDivsList = [];
+
         question.answers.forEach((answer, i) => {
             const answerOption = document.createElement('div');
             answerOption.className = 'answer-option';
-            if (selectedAnswers[index] === i) {
+            answerOption.dataset.answerId = i;
+
+            if (question.userAnswerId === i) {
                 answerOption.classList.add('selected');
+                nextBtn.classList.remove("disabled");
             }
+
             answerOption.textContent = answer.text;
-            answerOption.addEventListener('click', () => selectAnswer(i));
-            answersContainer.appendChild(answerOption);
+            answerOption.addEventListener('click', () => selectAnswer(i, index));
+            answerDivsList.push(answerOption);
+        });
+
+        shuffleArray(answerDivsList);
+
+        answerDivsList.forEach(element => {
+            answersContainer.appendChild(element);
         });
 
         prevBtn.textContent = index === 0 ? "На главную" : "Назад";
         nextBtn.textContent = index === questions.length - 1 ? 'Завершить' : 'Далее';
     }
 
-    function selectAnswer(answerIndex) {
-        nextBtn.classList.remove("disabled")
-        selectedAnswers[currentQuestionIndex] = answerIndex;
-        document.querySelectorAll('.answer-option').forEach((opt, i) => {
-            opt.classList.toggle('selected', i === answerIndex);
+    function selectAnswer(answerId, questionIndex) {
+        // Сохраняем выбор прямо в объект вопроса
+        questions[questionIndex].userAnswerId = answerId;
+
+        // Обновляем UI
+        document.querySelectorAll('.answer-option').forEach(opt => {
+            if (parseInt(opt.dataset.answerId) === answerId) {
+                opt.classList.add('selected');
+            } else {
+                opt.classList.remove('selected');
+            }
         });
+
+        nextBtn.classList.remove("disabled");
     }
 
     // === ОБРАБОТКА КНОПКИ "ДАЛЕЕ" С АНИМАЦИЕЙ ===
     nextBtn.addEventListener('click', function () {
         answersContainer.style.pointerEvents = "none";
-        const userAnswerIndex = selectedAnswers[currentQuestionIndex];
-        if (userAnswerIndex === null) {
+        const currentQuestion = questions[currentQuestionIndex];
+        const userAnswerId = currentQuestion.userAnswerId;
+        if (userAnswerId === undefined || userAnswerId === null) {
             alert('Пожалуйста, выберите ответ!');
             return;
         }
 
-        const isCorrect = questions[currentQuestionIndex].answers[userAnswerIndex].correct;
+        const isCorrect = currentQuestion.answers[userAnswerId].correct;
 
         const selectedRow = document.querySelector('.answer-option.selected');
-        // Анимация кнопки
         nextBtn.disabled = true;
         nextBtn.style.transition = 'background-color 0.3s';
-
         nextBtn.style.backgroundColor = isCorrect ? '#4CAF50' : '#F44336';
-        
+
         selectedRow.classList.remove("selected");
         selectedRow.classList.add(isCorrect ? "correct" : "incorrect");
-        
         nextBtn.textContent = isCorrect ? 'Верно!' : 'Неверно!';
 
         setTimeout(() => {
@@ -219,10 +247,13 @@ document.addEventListener('DOMContentLoaded', function () {
         resultsList.innerHTML = '';
 
         questions.forEach((q, i) => {
-            const userAnswerIndex = selectedAnswers[i];
-            const userAnswerText = userAnswerIndex !== null ? q.answers[userAnswerIndex].text : 'Не отвечено';
+            const userAnswerId = q.userAnswerId;
+            const userAnswerText = userAnswerId !== undefined && userAnswerId !== null
+                ? q.answers[userAnswerId].text
+                : 'Не отвечено';
+
             const correctAnswerText = q.answers.find(a => a.correct).text;
-            const isCorrect = userAnswerIndex !== null && q.answers[userAnswerIndex].correct;
+            const isCorrect = userAnswerId !== undefined && userAnswerId !== null && q.answers[userAnswerId].correct;
 
             if (isCorrect) correctCount++;
 
@@ -238,11 +269,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 <hr>
             `;
             resultsList.appendChild(resultItem);
-
-            const backToMainBtn = document.getElementById('back-to-main');
-            backToMainBtn.addEventListener('click', () => {
-                location.reload();
-            });
         });
 
         document.getElementById('correct-count').textContent = correctCount;
@@ -250,6 +276,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
         quizScreen.classList.remove('active');
         document.getElementById('results-screen').classList.add('active');
+
+        // Обработчик кнопки "На главную" — вынести ВНЕ цикла!
+        const backToMainBtn = document.getElementById('back-to-main');
+        backToMainBtn.onclick = () => {
+            location.reload();
+        };
     }
 
     // === РЕДАКТОР (остаётся без изменений, кроме мелких правок) ===
