@@ -152,12 +152,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
         answersContainer.innerHTML = '';
 
-        let answerDivsList = [];
+        const indices = Array.from({ length: question.answers.length }, (_, i) => i);
 
-        question.answers.forEach((answer, i) => {
+        // Перемешиваем индексы
+        shuffleArray(indices); // твоя функция — она корректна
+
+        // Создаём элементы в новом порядке
+        indices.forEach(i => {
+            const answer = question.answers[i];
             const answerOption = document.createElement('div');
             answerOption.className = 'answer-option';
-            answerOption.dataset.answerId = i;
+            answerOption.dataset.answerId = i; // ← всё ещё ссылается на правильный индекс в данных!
 
             if (question.userAnswerId === i) {
                 answerOption.classList.add('selected');
@@ -166,13 +171,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             answerOption.textContent = answer.text;
             answerOption.addEventListener('click', () => selectAnswer(i, index));
-            answerDivsList.push(answerOption);
-        });
-
-        shuffleArray(answerDivsList);
-
-        answerDivsList.forEach(element => {
-            answersContainer.appendChild(element);
+            answersContainer.appendChild(answerOption);
         });
 
         prevBtn.textContent = index === 0 ? "На главную" : "Назад";
