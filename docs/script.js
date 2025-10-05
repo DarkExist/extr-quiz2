@@ -228,7 +228,7 @@ document.addEventListener('DOMContentLoaded', function () {
             } else {
                 showResultsScreen();
             }
-        }, 2000);
+        }, 1000);
     });
 
     prevBtn.addEventListener('click', function () {
