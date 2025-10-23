@@ -94,11 +94,11 @@ document.addEventListener('DOMContentLoaded', function () {
         showQuestion(currentQuestionIndex);
     });
 
-    editBtn.addEventListener('click', function () {
-        mainMenu.classList.remove('active');
-        editorScreen.classList.add('active');
-        renderQuestionsList();
-    });
+    // editBtn.addEventListener('click', function () {
+    //     mainMenu.classList.remove('active');
+    //     editorScreen.classList.add('active');
+    //     renderQuestionsList();
+    // });
 
     backToMenuBtn.addEventListener('click', function () {
         editorScreen.classList.remove('active');
