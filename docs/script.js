@@ -46,11 +46,11 @@ document.addEventListener('DOMContentLoaded', function () {
     // Загрузка вопросов
     function loadQuestions() {
         const savedQuestions = localStorage.getItem('quizQuestions');
-        if (savedQuestions) {
-            questions = JSON.parse(savedQuestions);
-            updateTotalQuestions();
-            return;
-        }
+        // if (savedQuestions) {
+        //     questions = JSON.parse(savedQuestions);
+        //     updateTotalQuestions();
+        //     return;
+        // }
         
         // Загружаем вопросы из внешнего JSON файла
         fetch('questions.json')
